@@ -1,6 +1,4 @@
-import collections
 import enum
-from functools import total_ordering
 import pathlib
 import typing
 
@@ -9,19 +7,17 @@ import prettyprinter
 import pydantic
 import pydantic_yaml
 import pytimeparse
-from prettytable import PrettyTable
+# from prettytable import PrettyTable
 import datetime
+import tabulate
 import humanize
 # import pretty_errors
 import better_exceptions
 
 # better_exceptions.MAX_LENGTH = None
 
-
 HOURS_PER_DAY = datetime.timedelta(hours=8)
 HOURS_PER_DAY_IN_SECONDS = int(HOURS_PER_DAY.total_seconds())
-
-print(HOURS_PER_DAY, HOURS_PER_DAY_IN_SECONDS)
 
 
 DAYS = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri"}
@@ -125,20 +121,18 @@ def main():
             section, section_content = SectionModel.load(
                 path=path, id=section_name, chapter=chapter
             )
-            print(section)
 
             sections.append(section)
-            # prettyprinter.cpprint(section)
 
-    # prettyprinter.cpprint(sections)
-    table = PrettyTable()
-    table.field_names = [
-        "Day",
-        "Chapter",
-        "Section",
-        # "Duration",
-        # "Splitted Duration",
-    ]
+
+    # table = PrettyTable()
+    # table.field_names = [
+    #     "Day",
+    #     "Chapter",
+    #     "Section",
+    #     "Duration",
+    #     "Splitted Duration",
+    # ]
 
     total_duration_in_seconds = 0
 
@@ -155,10 +149,6 @@ def main():
             available_in_seconds = HOURS_PER_DAY_IN_SECONDS - total_duration_in_seconds
 
             duration_in_seconds = min(current_duration_in_seconds, available_in_seconds)
-            # if current_duration_in_seconds <= available_in_seconds:
-            #     duration_in_seconds = current_duration_in_seconds
-            # else:
-            #     duration_in_seconds = available_in_seconds
 
             total_duration_in_seconds += duration_in_seconds
 
@@ -167,10 +157,11 @@ def main():
                     DAYS[(day % len(DAYS)) + 1],
                     section.chapter.name,
                     section.name,
-                    # humanize.precisedelta(current_duration),
-                    # humanize.precisedelta(
-                    #     datetime.timedelta(seconds=duration_in_seconds)
-                    # ),
+                    # current_duration,
+                    humanize.precisedelta(current_duration),
+                    humanize.precisedelta(
+                        datetime.timedelta(seconds=duration_in_seconds)
+                    ),
                 ]
             )
             current_duration_in_seconds -= duration_in_seconds
@@ -179,7 +170,11 @@ def main():
                 total_duration_in_seconds = 0
                 day += 1
 
-    table.add_rows(rows)
+    # table.add_rows(rows)
+    # print(table)
+    table = tabulate.tabulate(rows,
+        headers=['Day', 'Chapter', 'Section', 'Duration', 'Splitted Duration'],
+        tablefmt="pretty") 
     print(table)
     # print(
     #     humanize.abs_timedelta(

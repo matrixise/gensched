@@ -1,2 +1,11 @@
 pyyaml
 python-frontmatter
+pytimeparse
+pydantic
+pydantic-yaml
+prettytable
+humanize
+better_exceptions
+prettyprinter
+pandas
+tabulate
