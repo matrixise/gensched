@@ -1,13 +1,8 @@
 import argparse
-import enum
 import pathlib
-import typing
 
 import frontmatter
 import prettyprinter
-import pydantic
-import pydantic_yaml
-import pytimeparse
 
 # from prettytable import PrettyTable
 import datetime
@@ -15,94 +10,14 @@ import tabulate
 import humanize
 
 # import pretty_errors
-import better_exceptions
 
 # better_exceptions.MAX_LENGTH = None
+from gensched.models import ConfigurationModel, ChapterModel, SectionModel
 
 HOURS_PER_DAY = datetime.timedelta(hours=8)
 HOURS_PER_DAY_IN_SECONDS = int(HOURS_PER_DAY.total_seconds())
 
-
 DAYS = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri"}
-
-
-class LevelEnum(enum.Enum):
-    STARTER = "starter"
-    INTERMEDIATE = "intermediate"
-    ADVANCED = "advanced"
-
-
-def parse_frontmatter(path: pathlib.Path, defaults=None):
-    with path.open() as fp:
-        if defaults is None:
-            defaults = {}
-        return frontmatter.parse(fp.read(), **defaults)
-
-
-class ConfigurationModel(pydantic_yaml.YamlModel):
-    name: str
-    duration: str = "1h"
-    project: typing.Optional[str] = None
-    version: typing.Optional[float] = None
-    level: LevelEnum = LevelEnum.STARTER
-    dependencies: typing.Optional[typing.List[str]]
-    chapters: typing.List[str]
-    requirements: typing.Dict[str, typing.List[str]]
-
-    @classmethod
-    def load(cls, configuration_file: pathlib.Path):
-        with configuration_file.open() as fp:
-            return ConfigurationModel.parse_raw(fp, proto="yaml")
-
-
-class PathLoaderMixin:
-    @classmethod
-    def load(cls, path: pathlib.Path, **kwargs):
-        metadata, content = parse_frontmatter(path)
-        if kwargs:
-            metadata.update(kwargs)
-        return cls(**metadata), content
-
-
-class IdMixin(pydantic.BaseModel):
-    id: str
-
-
-class NameMixin(pydantic.BaseModel):
-    name: str
-
-
-class TagsMixin(pydantic.BaseModel):
-    tags: typing.Optional[typing.List[str]] = pydantic.Field(default_factory=list)
-
-
-class ChapterModel(IdMixin, NameMixin, TagsMixin, PathLoaderMixin, pydantic.BaseModel):
-    sections: typing.Optional[typing.List[str]] = pydantic.Field(default_factory=list)
-
-    @property
-    def slug(self):
-        return self.id
-
-
-class SectionModel(IdMixin, NameMixin, TagsMixin, pydantic.BaseModel):
-    chapter: ChapterModel
-    duration: datetime.timedelta
-
-    @property
-    def slug(self):
-        return f"{self.chapter.slug}_{self.id}"
-
-    @classmethod
-    def load(cls, path: pathlib.Path, id: str, chapter: ChapterModel):
-        metadata, content = parse_frontmatter(
-            path,
-            defaults=dict(duration="1h", name=map(str.title, path.name.split("_"))),
-        )
-
-        metadata["id"] = id
-        metadata["chapter"] = chapter
-        metadata["duration"] = pytimeparse.parse(str(metadata["duration"]))
-        return cls(**metadata), content
 
 
 def parse_args():
