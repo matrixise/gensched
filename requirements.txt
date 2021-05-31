@@ -20,7 +20,7 @@ python-dateutil==2.8.1
     # via pandas
 python-frontmatter==1.0.0
     # via gensched (pyproject.toml)
-pytimeparser==0.2.0
+pytimeparse==1.1.8
     # via gensched (pyproject.toml)
 pytz==2021.1
     # via pandas
