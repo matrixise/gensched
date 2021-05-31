@@ -53,16 +53,10 @@ def get_sections(args, configuration):
     for chapter_name in configuration.chapters:
         path = args.directory.joinpath(chapter_name, "index.md")
         if not path.exists():
-            # print(f"Chapter - {chapter_name} does not exist")
             continue
         chapter, chapter_content = ChapterModel.load(path, id=chapter_name)
-        # prettyprinter.cpprint(chapter)
         for section_name in chapter.sections:
             path = args.directory.joinpath(chapter_name).joinpath(section_name + ".md")
-            # if not path.exists():
-            #     # print(f"Section - {path} does not exist")
-            #     continue
-            # print(f"Section - {path}")
             section, section_content = SectionModel.load(
                 path=path, id=section_name, chapter=chapter
             )
