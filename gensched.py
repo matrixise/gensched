@@ -1,3 +1,4 @@
+import argparse
 import enum
 import pathlib
 import typing
@@ -47,8 +48,8 @@ class ConfigurationModel(pydantic_yaml.YamlModel):
     requirements: typing.Dict[str, typing.List[str]]
 
     @classmethod
-    def load(cls, configuration_file: str):
-        with pathlib.Path(configuration_file).open() as fp:
+    def load(cls, configuration_file: pathlib.Path):
+        with configuration_file.open() as fp:
             return ConfigurationModel.parse_raw(fp, proto="yaml")
 
 
@@ -98,22 +99,33 @@ class SectionModel(IdMixin, NameMixin, TagsMixin, pydantic.BaseModel):
         metadata["duration"] = pytimeparse.parse(str(metadata["duration"]))
         return cls(**metadata), content
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('-d', '--directory',
+                        help='Schedule directory',
+                        type=lambda p: pathlib.Path(p).absolute().resolve(),
+                        default=pathlib.Path(__file__).absolute().parent / "schedule")
+    return parser.parse_args()
 
 def main():
-    configuration = ConfigurationModel.load("config.yml")
-    # prettyprinter.cpprint(configuration)
+    args = parse_args()
+    configuration = ConfigurationModel.load(args.directory.joinpath('config.yml'))
+
+    prettyprinter.cpprint(configuration)
 
     sections = []
 
     for chapter_name in configuration.chapters:
-        path = pathlib.Path.cwd().joinpath(chapter_name, "index.md")
+        path = args.directory.joinpath(chapter_name, "index.md")
         if not path.exists():
             # print(f"Chapter - {chapter_name} does not exist")
             continue
         chapter, chapter_content = ChapterModel.load(path, id=chapter_name)
         # prettyprinter.cpprint(chapter)
         for section_name in chapter.sections:
-            path = pathlib.Path(chapter_name).joinpath(section_name + ".md")
+            path = args.directory.joinpath(chapter_name).joinpath(section_name + ".md")
             # if not path.exists():
             #     # print(f"Section - {path} does not exist")
             #     continue
@@ -170,11 +182,9 @@ def main():
                 total_duration_in_seconds = 0
                 day += 1
 
-    # table.add_rows(rows)
-    # print(table)
     table = tabulate.tabulate(rows,
         headers=['Day', 'Chapter', 'Section', 'Duration', 'Splitted Duration'],
-        tablefmt="pretty") 
+        tablefmt="pretty")
     print(table)
     # print(
     #     humanize.abs_timedelta(
