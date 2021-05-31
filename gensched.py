@@ -8,10 +8,12 @@ import prettyprinter
 import pydantic
 import pydantic_yaml
 import pytimeparse
+
 # from prettytable import PrettyTable
 import datetime
 import tabulate
 import humanize
+
 # import pretty_errors
 import better_exceptions
 
@@ -39,7 +41,7 @@ def parse_frontmatter(path: pathlib.Path, defaults=None):
 
 class ConfigurationModel(pydantic_yaml.YamlModel):
     name: str
-    duration: str = '1h'
+    duration: str = "1h"
     project: typing.Optional[str] = None
     version: typing.Optional[float] = None
     level: LevelEnum = LevelEnum.STARTER
@@ -92,26 +94,34 @@ class SectionModel(IdMixin, NameMixin, TagsMixin, pydantic.BaseModel):
 
     @classmethod
     def load(cls, path: pathlib.Path, id: str, chapter: ChapterModel):
-        metadata, content = parse_frontmatter(path, defaults=dict(duration='1h', name=map(str.title, path.name.split('_'))))
+        metadata, content = parse_frontmatter(
+            path,
+            defaults=dict(duration="1h", name=map(str.title, path.name.split("_"))),
+        )
 
         metadata["id"] = id
         metadata["chapter"] = chapter
         metadata["duration"] = pytimeparse.parse(str(metadata["duration"]))
         return cls(**metadata), content
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('-d', '--directory',
-                        help='Schedule directory',
-                        type=lambda p: pathlib.Path(p).absolute().resolve(),
-                        default=pathlib.Path(__file__).absolute().parent / "schedule")
+    parser.add_argument(
+        "-d",
+        "--directory",
+        help="Schedule directory",
+        type=lambda p: pathlib.Path(p).absolute().resolve(),
+        default=pathlib.Path(__file__).absolute().parent / "schedule",
+    )
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
-    configuration = ConfigurationModel.load(args.directory.joinpath('config.yml'))
+    configuration = ConfigurationModel.load(args.directory.joinpath("config.yml"))
 
     prettyprinter.cpprint(configuration)
 
@@ -135,7 +145,6 @@ def main():
             )
 
             sections.append(section)
-
 
     # table = PrettyTable()
     # table.field_names = [
@@ -182,9 +191,11 @@ def main():
                 total_duration_in_seconds = 0
                 day += 1
 
-    table = tabulate.tabulate(rows,
-        headers=['Day', 'Chapter', 'Section', 'Duration', 'Splitted Duration'],
-        tablefmt="pretty")
+    table = tabulate.tabulate(
+        rows,
+        headers=["Day", "Chapter", "Section", "Duration", "Splitted Duration"],
+        tablefmt="pretty",
+    )
     print(table)
     # print(
     #     humanize.abs_timedelta(
