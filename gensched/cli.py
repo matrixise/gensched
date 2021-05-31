@@ -1,7 +1,6 @@
 import argparse
 import pathlib
 
-import prettyprinter
 import tabulate
 
 from gensched.gensched import get_sections, build_rows
@@ -25,8 +24,6 @@ def parse_args():
 def main():
     args = parse_args()
     configuration = ConfigurationModel.load(args.directory.joinpath("config.yml"))
-
-    prettyprinter.cpprint(configuration)
 
     sections = get_sections(args, configuration)
 
